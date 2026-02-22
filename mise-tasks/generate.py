@@ -34,7 +34,7 @@ SKILL_NAMES = [
 # Mapping: skill name -> list of template files to copy into references/
 SKILL_REFERENCES: dict[str, list[str]] = {
     "speckit-specify": ["spec-template.md"],
-    "speckit-clarify": ["spec-template.md"],
+    "speckit-clarify": [],
     "speckit-constitution": ["constitution-template.md"],
     "speckit-plan": ["plan-template.md", "agent-file-template.md"],
     "speckit-tasks": ["tasks-template.md"],
