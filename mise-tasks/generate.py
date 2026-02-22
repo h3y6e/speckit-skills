@@ -19,7 +19,7 @@ SCRIPTS_DIR = ROOT / ".specify" / "scripts" / "bash"
 OUTPUT_DIR = ROOT / "skills"
 
 # ---------------------------------------------------------------------------
-# Skill definitions — single source of truth for what each skill contains
+# Skill definitions — what files each skill contains
 # ---------------------------------------------------------------------------
 
 SKILLS: dict[str, dict[str, list[str]]] = {
@@ -57,116 +57,106 @@ SKILLS: dict[str, dict[str, list[str]]] = {
 }
 
 # ---------------------------------------------------------------------------
-# Text patches
+# Patches — all expressed as (old, new) pairs
 # ---------------------------------------------------------------------------
 
-# Applied to all SKILL.md and references/ files.
-COMMON_REPLACEMENTS: dict[str, str] = {
-    ".specify/scripts/bash/": "scripts/",
-    ".specify/templates/": "references/",
-    ".specify/memory/constitution.md": "specs/constitution.md",
-    "compatibility: Requires spec-kit project structure with .specify/ directory\n": "",
-    "## User Input\n\n```text\n$ARGUMENTS\n```\n\nYou **MUST** consider the user input before proceeding (if not empty).\n\n": "",
-}
+type Patches = list[tuple[str, str]]
 
-# Skill-specific SKILL.md patches (applied after COMMON_REPLACEMENTS).
-SKILL_MD_REPLACEMENTS: dict[str, dict[str, str]] = {
-    "speckit-analyze": {
-        "\n## Context\n\n$ARGUMENTS\n": "",
-    },
-    "speckit-clarify": {
-        "\nContext for prioritization: $ARGUMENTS\n": "",
-    },
-    "speckit-tasks": {
-        "\nContext for task generation: $ARGUMENTS\n": "",
-    },
-    "speckit-specify": {
-        "The text the user typed after `/speckit.specify` in the triggering message **is** the feature description. Assume you always have it available in this conversation even if `$ARGUMENTS` appears literally below. Do not ask the user to repeat it unless they provided an empty command.": (
-            "The user's message that triggered this skill **is** the feature description. Do not ask the user to repeat it unless they provided no description."
-        ),
-        '.specify/scripts/bash/create-new-feature.sh --json "$ARGUMENTS"': ('.specify/scripts/bash/create-new-feature.sh --json "<feature-description>"'),
-        '.specify/scripts/bash/create-new-feature.sh --json "$ARGUMENTS" --json' + ' --number 5 --short-name "user-auth" "Add user authentication"': ('.specify/scripts/bash/create-new-feature.sh --json --number 5 --short-name "user-auth" "Add user authentication"'),
-        '.specify/scripts/bash/create-new-feature.sh --json "$ARGUMENTS" -Json' + ' -Number 5 -ShortName "user-auth" "Add user authentication"': ('.specify/scripts/bash/create-new-feature.sh --json -Number 5 -ShortName "user-auth" "Add user authentication"'),
-    },
-    "speckit-checklist": {
-        "already unambiguous in `$ARGUMENTS`": "already unambiguous in the user's input",
-        "Combine `$ARGUMENTS` + clarifying answers": ("Combine the user's input + clarifying answers"),
-    },
-}
+FORBIDDEN_PATTERNS: list[re.Pattern[str]] = [
+    re.compile(r"\.specify/"),
+    re.compile(r"\$ARGUMENTS"),
+]
 
-# Reference file patches: relative path -> replacements.
-REFERENCE_REPLACEMENTS: dict[str, dict[str, str]] = {
-    "spec-template.md": {
-        '"$ARGUMENTS"': '"<user description>"',
-    },
-}
-
-# speckit-constitution references templates in sibling skills (applied before COMMON_REPLACEMENTS).
-CONSTITUTION_REPLACEMENTS: dict[str, str] = {
-    ".specify/templates/plan-template.md": "../speckit-plan/references/plan-template.md",
-    ".specify/templates/spec-template.md": "../speckit-specify/references/spec-template.md",
-    ".specify/templates/tasks-template.md": "../speckit-tasks/references/tasks-template.md",
-    ("   - Read each command file in `.specify/templates/commands/*.md` (including this one) to verify no outdated references (agent-specific names like CLAUDE only) remain when generic guidance is required."): (
-        "   - Review all other speckit skill definitions (SKILL.md files in sibling speckit-* directories) to verify no outdated references (agent-specific names like CLAUDE only) remain when generic guidance is required."
-    ),
-}
-
-# Script-specific patches: filename -> list of (old, new) pairs.
 SCRIPT_DIR_EXPR = '$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)'
 
-SCRIPT_REPLACEMENTS: dict[str, list[tuple[str, str]]] = {
-    "common.sh": [
-        (
-            '    else\n        # Fall back to script location for non-git repos\n        local script_dir="$(CDPATH="" cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"\n        (cd "$script_dir/../../.." && pwd)\n    fi',
-            "    else\n        # Fall back to current directory for non-git repos\n        pwd\n    fi",
-        ),
-    ],
-    "create-new-feature.sh": [
-        (
-            'if [ -d "$dir/.git" ] || [ -d "$dir/.specify" ]; then',
-            'if [ -d "$dir/.git" ]; then',
-        ),
-        (
-            'TEMPLATE="$REPO_ROOT/.specify/templates/spec-template.md"',
-            f'TEMPLATE="{SCRIPT_DIR_EXPR}/../references/spec-template.md"',
-        ),
-    ],
-    "setup-plan.sh": [
-        (
-            'TEMPLATE="$REPO_ROOT/.specify/templates/plan-template.md"',
-            f'TEMPLATE="{SCRIPT_DIR_EXPR}/../references/plan-template.md"',
-        ),
-    ],
-    "update-agent-context.sh": [
-        (
-            'TEMPLATE_FILE="$REPO_ROOT/.specify/templates/agent-file-template.md"',
-            f'TEMPLATE_FILE="{SCRIPT_DIR_EXPR}/../references/agent-file-template.md"',
-        ),
-    ],
-}
+# Applied to all copied files after skill-specific patches.
+COMMON_PATCHES: Patches = [
+    (".specify/scripts/bash/", "scripts/"),
+    (".specify/templates/", "references/"),
+    (".specify/memory/constitution.md", "specs/constitution.md"),
+    ("compatibility: Requires spec-kit project structure with .specify/ directory\n", ""),
+    ("## User Input\n\n```text\n$ARGUMENTS\n```\n\nYou **MUST** consider the user input before proceeding (if not empty).\n\n", ""),
+    ('    else\n        # Fall back to script location for non-git repos\n        local script_dir="$(CDPATH="" cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"\n        (cd "$script_dir/../../.." && pwd)\n    fi', "    else\n        # Fall back to current directory for non-git repos\n        pwd\n    fi"),
+]
 
+# Skill-specific patches: skill name -> relative file path -> (old, new) pairs.
+SKILL_PATCHES: dict[str, dict[str, Patches]] = {
+    "speckit-specify": {
+        "SKILL.md": [
+            (
+                "The text the user typed after `/speckit.specify` in the triggering message **is** the feature description. Assume you always have it available in this conversation even if `$ARGUMENTS` appears literally below. Do not ask the user to repeat it unless they provided an empty command.",
+                "The user's message that triggered this skill **is** the feature description. Do not ask the user to repeat it unless they provided no description.",
+            ),
+            ('.specify/scripts/bash/create-new-feature.sh --json "$ARGUMENTS"', '.specify/scripts/bash/create-new-feature.sh --json "<feature-description>"'),
+            ('.specify/scripts/bash/create-new-feature.sh --json "$ARGUMENTS" --json --number 5 --short-name "user-auth" "Add user authentication"', '.specify/scripts/bash/create-new-feature.sh --json --number 5 --short-name "user-auth" "Add user authentication"'),
+            ('.specify/scripts/bash/create-new-feature.sh --json "$ARGUMENTS" -Json -Number 5 -ShortName "user-auth" "Add user authentication"', '.specify/scripts/bash/create-new-feature.sh --json -Number 5 -ShortName "user-auth" "Add user authentication"'),
+        ],
+        "references/spec-template.md": [
+            ('"$ARGUMENTS"', '"<user description>"'),
+        ],
+        "scripts/create-new-feature.sh": [
+            ('if [ -d "$dir/.git" ] || [ -d "$dir/.specify" ]; then', 'if [ -d "$dir/.git" ]; then'),
+            ('TEMPLATE="$REPO_ROOT/.specify/templates/spec-template.md"', f'TEMPLATE="{SCRIPT_DIR_EXPR}/../references/spec-template.md"'),
+        ],
+    },
+    "speckit-clarify": {
+        "SKILL.md": [
+            ("\nContext for prioritization: $ARGUMENTS\n", ""),
+        ],
+    },
+    "speckit-constitution": {
+        "SKILL.md": [
+            (".specify/templates/plan-template.md", "../speckit-plan/references/plan-template.md"),
+            (".specify/templates/spec-template.md", "../speckit-specify/references/spec-template.md"),
+            (".specify/templates/tasks-template.md", "../speckit-tasks/references/tasks-template.md"),
+            (
+                "   - Read each command file in `.specify/templates/commands/*.md` (including this one) to verify no outdated references (agent-specific names like CLAUDE only) remain when generic guidance is required.",
+                "   - Review all other speckit skill definitions (SKILL.md files in sibling speckit-* directories) to verify no outdated references (agent-specific names like CLAUDE only) remain when generic guidance is required.",
+            ),
+        ],
+    },
+    "speckit-plan": {
+        "scripts/setup-plan.sh": [
+            ('TEMPLATE="$REPO_ROOT/.specify/templates/plan-template.md"', f'TEMPLATE="{SCRIPT_DIR_EXPR}/../references/plan-template.md"'),
+        ],
+        "scripts/update-agent-context.sh": [
+            ('TEMPLATE_FILE="$REPO_ROOT/.specify/templates/agent-file-template.md"', f'TEMPLATE_FILE="{SCRIPT_DIR_EXPR}/../references/agent-file-template.md"'),
+        ],
+    },
+    "speckit-tasks": {
+        "SKILL.md": [
+            ("\nContext for task generation: $ARGUMENTS\n", ""),
+        ],
+    },
+    "speckit-checklist": {
+        "SKILL.md": [
+            ("already unambiguous in `$ARGUMENTS`", "already unambiguous in the user's input"),
+            ("Combine `$ARGUMENTS` + clarifying answers", "Combine the user's input + clarifying answers"),
+        ],
+    },
+    "speckit-analyze": {
+        "SKILL.md": [
+            ("\n## Context\n\n$ARGUMENTS\n", ""),
+        ],
+    },
+}
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
 
-def replace_all(text: str, replacements: dict[str, str]) -> str:
-    """Apply multiple string replacements in order."""
-    for old, new in replacements.items():
+def apply_patches(text: str, patches: Patches) -> str:
+    """Apply a list of (old, new) replacement pairs to text."""
+    for old, new in patches:
         text = text.replace(old, new)
     return text
 
 
-def patch_file(path: Path, replacements: dict[str, str] | list[tuple[str, str]]) -> bool:
-    """Read a file, apply replacements, write back if changed. Returns True if patched."""
+def patch_file(path: Path, patches: Patches) -> bool:
+    """Read a file, apply patches, write back if changed."""
     original = path.read_text()
-    if isinstance(replacements, dict):
-        patched = replace_all(original, replacements)
-    else:
-        patched = original
-        for old, new in replacements:
-            patched = patched.replace(old, new)
+    patched = apply_patches(original, patches)
     if patched != original:
         _ = path.write_text(patched)
         return True
@@ -174,9 +164,8 @@ def patch_file(path: Path, replacements: dict[str, str] | list[tuple[str, str]])
 
 
 def strip_metadata_frontmatter(path: Path) -> bool:
-    """Remove the metadata block from YAML frontmatter. Returns True if changed."""
+    """Remove the metadata block from YAML frontmatter."""
     original = path.read_text()
-    # Match 'metadata:\n' followed by indented lines (sub-keys like author:, source:).
     patched = re.sub(r"metadata:\n(?:  .+\n)+", "", original)
     if patched != original:
         _ = path.write_text(patched)
@@ -193,18 +182,7 @@ def run_specify_init() -> None:
     """Run specify init to generate base files."""
     print("Step 1: Running specify init...")
     result = subprocess.run(
-        [
-            "specify",
-            "init",
-            "--here",
-            "--ai",
-            "codex",
-            "--ai-skills",
-            "--force",
-            "--ignore-agent-tools",
-            "--script",
-            "sh",
-        ],
+        ["specify", "init", "--here", "--ai", "codex", "--ai-skills", "--force", "--ignore-agent-tools", "--script", "sh"],
         cwd=ROOT,
         capture_output=True,
         text=True,
@@ -232,12 +210,13 @@ def copy_and_patch_skills() -> None:
 
         out_dir = OUTPUT_DIR / skill_name
         out_dir.mkdir(parents=True, exist_ok=True)
+        patches = SKILL_PATCHES.get(skill_name, {})
 
         # Copy SKILL.md
         _ = shutil.copy2(src_skill_md, out_dir / "SKILL.md")
         print(f"  Copied  {skill_name}/SKILL.md")
 
-        # Copy references/ (templates)
+        # Copy references/
         for ref in resources.get("references", []):
             src = TEMPLATES_DIR / ref
             dst_dir = out_dir / "references"
@@ -259,34 +238,19 @@ def copy_and_patch_skills() -> None:
             else:
                 print(f"  WARNING: script {script} not found.")
 
-        # Patch SKILL.md
+        # Patch SKILL.md: strip metadata, then skill-specific, then common
         skill_md_path = out_dir / "SKILL.md"
         _ = strip_metadata_frontmatter(skill_md_path)
-        if skill_name == "speckit-constitution":
-            _ = patch_file(skill_md_path, CONSTITUTION_REPLACEMENTS)
-        skill_md_extra = SKILL_MD_REPLACEMENTS.get(skill_name)
-        if skill_md_extra:
-            _ = patch_file(skill_md_path, skill_md_extra)
-        if patch_file(skill_md_path, COMMON_REPLACEMENTS):
-            print(f"  Patched {skill_name}/SKILL.md")
 
-        # Patch references/
-        refs_dir = out_dir / "references"
-        if refs_dir.exists():
-            for ref_file in refs_dir.iterdir():
-                ref_extra = REFERENCE_REPLACEMENTS.get(ref_file.name)
-                if ref_extra:
-                    _ = patch_file(ref_file, ref_extra)
-                if patch_file(ref_file, COMMON_REPLACEMENTS):
-                    print(f"  Patched {skill_name}/references/{ref_file.name}")
-
-        # Patch scripts
-        scripts_dir = out_dir / "scripts"
-        if scripts_dir.exists():
-            for script_file in scripts_dir.iterdir():
-                pairs = SCRIPT_REPLACEMENTS.get(script_file.name)
-                if pairs and patch_file(script_file, pairs):
-                    print(f"  Patched {skill_name}/scripts/{script_file.name}")
+        # Patch all files: skill-specific patches first, then common patches
+        for path in sorted(out_dir.rglob("*")):
+            if not path.is_file():
+                continue
+            rel_path = str(path.relative_to(out_dir))
+            specific = patches.get(rel_path, [])
+            combined = specific + COMMON_PATCHES
+            if combined and patch_file(path, combined):
+                print(f"  Patched {skill_name}/{rel_path}")
 
 
 def print_summary() -> None:
@@ -306,15 +270,8 @@ def print_summary() -> None:
         print(f"  {name}/{extra}")
 
 
-# Patterns that must not remain in generated skills.
-FORBIDDEN_PATTERNS: list[re.Pattern[str]] = [
-    re.compile(r"\.specify/"),
-    re.compile(r"\$ARGUMENTS"),
-]
-
-
 def verify_output() -> None:
-    """Verify no forbidden patterns remain in generated skills. Exit on failure."""
+    """Verify no forbidden patterns remain in generated skills."""
     print("Step 3: Verifying output...")
     violations: list[str] = []
     for path in sorted(OUTPUT_DIR.rglob("*")):
