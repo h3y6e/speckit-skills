@@ -22,6 +22,7 @@ reportAny = false
 [tool.ruff]
 target-version = "py314"
 line-length = 320
+extend-exclude = [".agents"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP"]
