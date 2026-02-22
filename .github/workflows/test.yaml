@@ -1,0 +1,42 @@
+name: test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  install:
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+
+    steps:
+      - run: npx -y skills add h3y6e/speckit-skills --all
+      - run: |
+          expected_skills=(
+            speckit-analyze
+            speckit-checklist
+            speckit-clarify
+            speckit-constitution
+            speckit-implement
+            speckit-plan
+            speckit-specify
+            speckit-tasks
+            speckit-taskstoissues
+          )
+
+          failed=0
+          for skill in "${expected_skills[@]}"; do
+            skill_md=".agents/skills/${skill}/SKILL.md"
+            if [ ! -f "$skill_md" ]; then
+              echo "::error::Missing ${skill_md}"
+              failed=1
+            else
+              echo "OK: ${skill_md}"
+            fi
+          done
+
+          if [ "$failed" -eq 1 ]; then
+            echo "::error::Some skills were not installed correctly"
+            exit 1
+          fi
+
+          echo "All ${#expected_skills[@]} skills installed successfully"
