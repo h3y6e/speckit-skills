@@ -1,0 +1,5 @@
+[tagpr]
+	releaseBranch = main
+	versionFile = pyproject.toml
+	vPrefix = true
+	command = uv lock
