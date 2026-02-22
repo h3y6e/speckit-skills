@@ -10,17 +10,17 @@ npx skills add h3y6e/speckit-skills
 
 ## Skills
 
-| Skill                                                     | Description                                    |
-| --------------------------------------------------------- | ---------------------------------------------- |
-| [`speckit-constitution`](./skills/speckit-constitution)   | Review and update the project constitution     |
-| [`speckit-specify`](./skills/speckit-specify)             | Create a new feature specification             |
-| [`speckit-clarify`](./skills/speckit-clarify)             | Clarify and prioritize open questions in specs |
-| [`speckit-plan`](./skills/speckit-plan)                   | Generate an implementation plan from a spec    |
-| [`speckit-tasks`](./skills/speckit-tasks)                 | Break a plan into actionable tasks             |
-| [`speckit-analyze`](./skills/speckit-analyze)             | Analyze specs for consistency and completeness |
-| [`speckit-checklist`](./skills/speckit-checklist)         | Generate a checklist for a task                |
-| [`speckit-taskstoissues`](./skills/speckit-taskstoissues) | Convert tasks to GitHub issues                 |
-| [`speckit-implement`](./skills/speckit-implement)         | Implement a task following the spec and plan   |
+| Skill                                                              | Description                                    |
+| ------------------------------------------------------------------ | ---------------------------------------------- |
+| [`speckit-constitution`](./skills/speckit-constitution/SKILL.md)   | Review and update the project constitution     |
+| [`speckit-specify`](./skills/speckit-specify/SKILL.md)             | Create a new feature specification             |
+| [`speckit-clarify`](./skills/speckit-clarify/SKILL.md)             | Clarify and prioritize open questions in specs |
+| [`speckit-plan`](./skills/speckit-plan/SKILL.md)                   | Generate an implementation plan from a spec    |
+| [`speckit-tasks`](./skills/speckit-tasks/SKILL.md)                 | Break a plan into actionable tasks             |
+| [`speckit-analyze`](./skills/speckit-analyze/SKILL.md)             | Analyze specs for consistency and completeness |
+| [`speckit-checklist`](./skills/speckit-checklist/SKILL.md)         | Generate a checklist for a task                |
+| [`speckit-taskstoissues`](./skills/speckit-taskstoissues/SKILL.md) | Convert tasks to GitHub issues                 |
+| [`speckit-implement`](./skills/speckit-implement/SKILL.md)         | Implement a task following the spec and plan   |
 
 ## Development
 
