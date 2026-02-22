@@ -21,7 +21,7 @@ reportAny = false
 
 [tool.ruff]
 target-version = "py314"
-line-length = 120
+line-length = 320
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP"]

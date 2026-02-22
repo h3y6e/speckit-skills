@@ -66,6 +66,39 @@ COMMON_REPLACEMENTS: dict[str, str] = {
     ".specify/templates/": "references/",
     ".specify/memory/constitution.md": "specs/constitution.md",
     "compatibility: Requires spec-kit project structure with .specify/ directory\n": "",
+    "## User Input\n\n```text\n$ARGUMENTS\n```\n\nYou **MUST** consider the user input before proceeding (if not empty).\n\n": "",
+}
+
+# Skill-specific SKILL.md patches (applied after COMMON_REPLACEMENTS).
+SKILL_MD_REPLACEMENTS: dict[str, dict[str, str]] = {
+    "speckit-analyze": {
+        "\n## Context\n\n$ARGUMENTS\n": "",
+    },
+    "speckit-clarify": {
+        "\nContext for prioritization: $ARGUMENTS\n": "",
+    },
+    "speckit-tasks": {
+        "\nContext for task generation: $ARGUMENTS\n": "",
+    },
+    "speckit-specify": {
+        "The text the user typed after `/speckit.specify` in the triggering message **is** the feature description. Assume you always have it available in this conversation even if `$ARGUMENTS` appears literally below. Do not ask the user to repeat it unless they provided an empty command.": (
+            "The user's message that triggered this skill **is** the feature description. Do not ask the user to repeat it unless they provided no description."
+        ),
+        '.specify/scripts/bash/create-new-feature.sh --json "$ARGUMENTS"': ('.specify/scripts/bash/create-new-feature.sh --json "<feature-description>"'),
+        '.specify/scripts/bash/create-new-feature.sh --json "$ARGUMENTS" --json' + ' --number 5 --short-name "user-auth" "Add user authentication"': ('.specify/scripts/bash/create-new-feature.sh --json --number 5 --short-name "user-auth" "Add user authentication"'),
+        '.specify/scripts/bash/create-new-feature.sh --json "$ARGUMENTS" -Json' + ' -Number 5 -ShortName "user-auth" "Add user authentication"': ('.specify/scripts/bash/create-new-feature.sh --json -Number 5 -ShortName "user-auth" "Add user authentication"'),
+    },
+    "speckit-checklist": {
+        "already unambiguous in `$ARGUMENTS`": "already unambiguous in the user's input",
+        "Combine `$ARGUMENTS` + clarifying answers": ("Combine the user's input + clarifying answers"),
+    },
+}
+
+# Reference file patches: relative path -> replacements.
+REFERENCE_REPLACEMENTS: dict[str, dict[str, str]] = {
+    "spec-template.md": {
+        '"$ARGUMENTS"': '"<user description>"',
+    },
 }
 
 # speckit-constitution references templates in sibling skills (applied before COMMON_REPLACEMENTS).
@@ -73,18 +106,8 @@ CONSTITUTION_REPLACEMENTS: dict[str, str] = {
     ".specify/templates/plan-template.md": "../speckit-plan/references/plan-template.md",
     ".specify/templates/spec-template.md": "../speckit-specify/references/spec-template.md",
     ".specify/templates/tasks-template.md": "../speckit-tasks/references/tasks-template.md",
-    # The commands/*.md path never exists in deployed projects (spec-kit packaging bug).
-    (
-        "   - Read each command file in `.specify/templates/commands/*.md`"
-        " (including this one) to verify no outdated references"
-        " (agent-specific names like CLAUDE only) remain"
-        " when generic guidance is required."
-    ): (
-        "   - Review all other speckit skill definitions"
-        " (SKILL.md files in sibling speckit-* directories)"
-        " to verify no outdated references"
-        " (agent-specific names like CLAUDE only) remain"
-        " when generic guidance is required."
+    ("   - Read each command file in `.specify/templates/commands/*.md` (including this one) to verify no outdated references (agent-specific names like CLAUDE only) remain when generic guidance is required."): (
+        "   - Review all other speckit skill definitions (SKILL.md files in sibling speckit-* directories) to verify no outdated references (agent-specific names like CLAUDE only) remain when generic guidance is required."
     ),
 }
 
@@ -94,11 +117,7 @@ SCRIPT_DIR_EXPR = '$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)'
 SCRIPT_REPLACEMENTS: dict[str, list[tuple[str, str]]] = {
     "common.sh": [
         (
-            "    else\n"
-            + "        # Fall back to script location for non-git repos\n"
-            + '        local script_dir="$(CDPATH="" cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"\n'
-            + '        (cd "$script_dir/../../.." && pwd)\n'
-            + "    fi",
+            '    else\n        # Fall back to script location for non-git repos\n        local script_dir="$(CDPATH="" cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"\n        (cd "$script_dir/../../.." && pwd)\n    fi',
             "    else\n        # Fall back to current directory for non-git repos\n        pwd\n    fi",
         ),
     ],
@@ -245,6 +264,9 @@ def copy_and_patch_skills() -> None:
         _ = strip_metadata_frontmatter(skill_md_path)
         if skill_name == "speckit-constitution":
             _ = patch_file(skill_md_path, CONSTITUTION_REPLACEMENTS)
+        skill_md_extra = SKILL_MD_REPLACEMENTS.get(skill_name)
+        if skill_md_extra:
+            _ = patch_file(skill_md_path, skill_md_extra)
         if patch_file(skill_md_path, COMMON_REPLACEMENTS):
             print(f"  Patched {skill_name}/SKILL.md")
 
@@ -252,6 +274,9 @@ def copy_and_patch_skills() -> None:
         refs_dir = out_dir / "references"
         if refs_dir.exists():
             for ref_file in refs_dir.iterdir():
+                ref_extra = REFERENCE_REPLACEMENTS.get(ref_file.name)
+                if ref_extra:
+                    _ = patch_file(ref_file, ref_extra)
                 if patch_file(ref_file, COMMON_REPLACEMENTS):
                     print(f"  Patched {skill_name}/references/{ref_file.name}")
 
@@ -281,11 +306,43 @@ def print_summary() -> None:
         print(f"  {name}/{extra}")
 
 
+# Patterns that must not remain in generated skills.
+FORBIDDEN_PATTERNS: list[re.Pattern[str]] = [
+    re.compile(r"\.specify/"),
+    re.compile(r"\$ARGUMENTS"),
+]
+
+
+def verify_output() -> None:
+    """Verify no forbidden patterns remain in generated skills. Exit on failure."""
+    print("Step 3: Verifying output...")
+    violations: list[str] = []
+    for path in sorted(OUTPUT_DIR.rglob("*")):
+        if not path.is_file():
+            continue
+        try:
+            content = path.read_text()
+        except UnicodeDecodeError:
+            continue
+        rel = path.relative_to(OUTPUT_DIR)
+        for pattern in FORBIDDEN_PATTERNS:
+            for match in pattern.finditer(content):
+                violations.append(f"  {rel}: found '{match.group()}'")
+    if violations:
+        print("ERROR: forbidden patterns found in output:")
+        for v in violations:
+            print(v)
+        sys.exit(1)
+    print(f"  OK — {len(FORBIDDEN_PATTERNS)} patterns checked, 0 violations.")
+
+
 def main() -> None:
     print("=== Generating Agent Skills from spec-kit ===\n")
     run_specify_init()
     print()
     copy_and_patch_skills()
+    print()
+    verify_output()
     print("\n=== Summary ===")
     print_summary()
 

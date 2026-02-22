@@ -8,17 +8,9 @@ description: Create or update feature specifications from natural language descr
 
 # Speckit Specify Skill
 
-## User Input
-
-```text
-$ARGUMENTS
-```
-
-You **MUST** consider the user input before proceeding (if not empty).
-
 ## Outline
 
-The text the user typed after `/speckit.specify` in the triggering message **is** the feature description. Assume you always have it available in this conversation even if `$ARGUMENTS` appears literally below. Do not ask the user to repeat it unless they provided an empty command.
+The user's message that triggered this skill **is** the feature description. Do not ask the user to repeat it unless they provided no description.
 
 Given that feature description, do this:
 
@@ -52,10 +44,10 @@ Given that feature description, do this:
       - Find the highest number N
       - Use N+1 for the new branch number
 
-   d. Run the script `scripts/create-new-feature.sh --json "$ARGUMENTS"` with the calculated number and short-name:
+   d. Run the script `scripts/create-new-feature.sh --json "<feature-description>"` with the calculated number and short-name:
       - Pass `--number N+1` and `--short-name "your-short-name"` along with the feature description
-      - Bash example: `scripts/create-new-feature.sh --json "$ARGUMENTS" --json --number 5 --short-name "user-auth" "Add user authentication"`
-      - PowerShell example: `scripts/create-new-feature.sh --json "$ARGUMENTS" -Json -Number 5 -ShortName "user-auth" "Add user authentication"`
+      - Bash example: `scripts/create-new-feature.sh --json "<feature-description>" --json --number 5 --short-name "user-auth" "Add user authentication"`
+      - PowerShell example: `scripts/create-new-feature.sh --json "<feature-description>" -Json -Number 5 -ShortName "user-auth" "Add user authentication"`
 
    **IMPORTANT**:
    - Check all three sources (remote branches, local branches, specs directories) to find the highest number
