@@ -5,7 +5,7 @@ GitHub's [spec-kit](https://github.com/github/spec-kit) Spec-Driven Development 
 ## Install
 
 ```sh
-npx skills add h3y6e/speckit-skills
+npx skills add h3y6e/speckit-skills -s '*'
 ```
 
 ## Skills
