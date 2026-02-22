@@ -1,0 +1,30 @@
+[project]
+name = "speckit-skills"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+  "pyyaml>=6.0.3",
+  "specify-cli",
+]
+
+[dependency-groups]
+dev = [
+  "basedpyright>=1.38.1",
+  "ruff>=0.15.2",
+]
+
+[tool.basedpyright]
+venvPath = "."
+venv = ".venv"
+reportExplicitAny = false
+reportAny = false
+
+[tool.ruff]
+target-version = "py314"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP"]
+
+[tool.uv.sources]
+specify-cli = { git = "https://github.com/github/spec-kit.git", tag = "v0.1.5" }

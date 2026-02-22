@@ -1,0 +1,5 @@
+.agents/skills/speckit-*
+.codex
+.ruff_cache
+.specify
+.venv

@@ -1,0 +1,9 @@
+[settings]
+experimental = true
+python.uv_venv_auto = "create|source"
+
+[prepare.uv]
+auto = true
+
+[tools]
+uv = "0.10.4"
