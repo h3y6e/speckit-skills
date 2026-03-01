@@ -8,6 +8,9 @@ on:
       - "pyproject.toml"
       - "uv.lock"
 
+permissions:
+  contents: write
+
 jobs:
   generate:
     runs-on: ubuntu-slim
