@@ -6,7 +6,7 @@ python.uv_venv_auto = "create|source"
 auto = true
 
 [tools]
-uv = "0.10.4"
+uv = "0.10.6"
 
 [tasks.lint]
 run = "uv run ruff check"
