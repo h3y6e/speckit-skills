@@ -273,8 +273,8 @@ wheels = [
 
 [[package]]
 name = "specify-cli"
-version = "0.1.6"
-source = { git = "https://github.com/github/spec-kit.git?tag=v0.1.7#61b0637a6dc8d9a72372acc1200301d84c91470a" }
+version = "0.1.13"
+source = { git = "https://github.com/github/spec-kit.git?tag=v0.1.13#f4fe2d35a9ae305c34ee70b59f605205f9f9e224" }
 dependencies = [
     { name = "click" },
     { name = "httpx", extra = ["socks"] },
@@ -305,7 +305,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "pyyaml", specifier = ">=6.0.3" },
-    { name = "specify-cli", git = "https://github.com/github/spec-kit.git?tag=v0.1.7" },
+    { name = "specify-cli", git = "https://github.com/github/spec-kit.git?tag=v0.1.13" },
 ]
 
 [package.metadata.requires-dev]
