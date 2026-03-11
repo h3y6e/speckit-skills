@@ -1,4 +1,5 @@
 .agents/skills/speckit-*
+.mise/
 .codex
 .ruff_cache
 .specify

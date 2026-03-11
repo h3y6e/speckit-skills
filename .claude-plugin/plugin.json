@@ -1,0 +1,9 @@
+{
+  "name": "speckit",
+  "description": "Spec-driven development (SDD) skills based on GitHub's spec-kit: constitution, specify, clarify, plan, tasks, checklist, implement, analyze, and taskstoissues.",
+  "version": "0.1.1",
+  "author": {
+    "name": "h3y6e"
+  },
+  "repository": "https://github.com/h3y6e/speckit-skills"
+}

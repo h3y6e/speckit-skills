@@ -1,5 +1,5 @@
 [tagpr]
 	releaseBranch = main
-	versionFile = pyproject.toml
+	versionFile = pyproject.toml,.claude-plugin/plugin.json
 	vPrefix = true
 	command = uv lock
