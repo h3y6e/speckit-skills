@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.2.1](https://github.com/h3y6e/speckit-skills/compare/v0.2.0...v0.2.1) - 2026-03-19
+- Release for v0.2.1 by @heyhoe-releaser[bot] in https://github.com/h3y6e/speckit-skills/pull/20
+
 ## [v0.2.1](https://github.com/h3y6e/speckit-skills/compare/v0.2.0...v0.2.1) - 2026-03-13
 
 ## [v0.2.0](https://github.com/h3y6e/speckit-skills/compare/v0.1.1...v0.2.0) - 2026-03-11
