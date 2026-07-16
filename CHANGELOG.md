@@ -1,5 +1,15 @@
 # Changelog
 
+## [v0.2.1](https://github.com/h3y6e/speckit-skills/compare/v0.2.0...v0.2.1) - 2026-07-16
+
+- Release for v0.2.1 by @heyhoe-releaser[bot] in https://github.com/h3y6e/speckit-skills/pull/20
+- chore(deps): update jdx/mise-action action to v4 by @renovate[bot] in https://github.com/h3y6e/speckit-skills/pull/32
+- chore(deps): update actions/create-github-app-token action to v3 by @renovate[bot] in https://github.com/h3y6e/speckit-skills/pull/31
+- chore(deps): update actions/checkout action to v7 by @renovate[bot] in https://github.com/h3y6e/speckit-skills/pull/34
+- chore(deps): update songmu/tagpr action to v1.20.0 by @renovate[bot] in https://github.com/h3y6e/speckit-skills/pull/30
+- chore(deps): update dependency uv to v0.11.28 by @renovate[bot] in https://github.com/h3y6e/speckit-skills/pull/29
+- chore(deps): update h3y6e/action-slack action to v4.0.9 by @renovate[bot] in https://github.com/h3y6e/speckit-skills/pull/26
+
 ## [v0.2.1](https://github.com/h3y6e/speckit-skills/compare/v0.2.0...v0.2.1) - 2026-03-13
 
 ## [v0.2.0](https://github.com/h3y6e/speckit-skills/compare/v0.1.1...v0.2.0) - 2026-03-11
