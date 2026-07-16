@@ -3,7 +3,7 @@ experimental = true
 python.uv_venv_auto = "create|source"
 
 [tools]
-uv = "0.10.9"
+uv = "0.11.27"
 
 [tasks.lint]
 run = "uv run ruff check"
