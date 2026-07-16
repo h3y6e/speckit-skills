@@ -40,7 +40,7 @@ jobs:
           git commit -m "chore: regenerate skills"
           git push
       - if: always() && steps.diff.outputs.changed == 'true'
-        uses: h3y6e/action-slack@e69267b58dcf1ebcc48b9293d0a64a5c533c6d01 # v4.0.6
+        uses: h3y6e/action-slack@3674d9103dc6f24d59ae7a0d7bda5192d6cb50a6 # v4.0.9
         with:
           status: ${{ job.status }}
           fields: repo,workflow,ref
