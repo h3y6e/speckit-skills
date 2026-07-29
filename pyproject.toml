@@ -28,4 +28,4 @@ extend-exclude = [".agents"]
 select = ["E", "F", "W", "I", "UP"]
 
 [tool.uv.sources]
-specify-cli = { git = "https://github.com/github/spec-kit.git", rev = "v0.2.0" }
+specify-cli = { git = "https://github.com/github/spec-kit.git", rev = "f36634b5c1463d3592382e863cd5e7b8a94d9c9a" }
